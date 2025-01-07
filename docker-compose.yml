@@ -1,0 +1,10 @@
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - ./docker-data/db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=s3cr3t

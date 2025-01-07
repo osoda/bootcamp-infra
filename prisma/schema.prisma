@@ -1,0 +1,113 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CareerTimeline {
+  idCareerTimeline Int      @id @default(autoincrement())
+  idPerson         Int
+  career           String   @db.VarChar(45)
+  description      String   @db.Text
+  company          String   @db.VarChar(255)
+  init             DateTime @db.Date
+  end              DateTime @db.Date
+  dateStart        DateTime @default(now()) @db.Timestamp(0)
+  dateUpd          DateTime @default(now()) @db.Timestamp(0)
+  person           Person   @relation(fields: [idPerson], references: [idPerson], onDelete: NoAction, onUpdate: NoAction, map: "fk_CareerTimeline_Person1")
+
+  @@index([idPerson], map: "fk_CareerTimeline_Person1_idx")
+}
+
+model EducationalProject {
+  idEducationalProject Int      @id @default(autoincrement())
+  idPerson             Int
+  project              String   @db.VarChar(45)
+  description          String   @db.Text
+  url                  String?  @db.VarChar(255)
+  dateStart            DateTime @default(now()) @db.Timestamp(0)
+  dateUpd              DateTime @default(now()) @db.Timestamp(0)
+  person               Person   @relation(fields: [idPerson], references: [idPerson], onDelete: NoAction, onUpdate: NoAction, map: "fk_EducationalProject_Person10")
+
+  @@index([idPerson], map: "fk_EducationalProject_Person10_idx")
+}
+
+model LanguageProfile {
+  idLanguageProfile Int      @id @default(autoincrement())
+  idPerson          Int
+  language          String   @db.VarChar(45)
+  level             String   @db.VarChar(45)
+  dateStart         DateTime @default(now()) @db.Timestamp(0)
+  dateUpd           DateTime @default(now()) @db.Timestamp(0)
+  person            Person   @relation(fields: [idPerson], references: [idPerson], onDelete: NoAction, onUpdate: NoAction, map: "fk_LanguageProfile_Person1")
+
+  @@index([idPerson], map: "fk_LanguageProfile_Person1_idx")
+}
+
+model Person {
+  idPerson           Int                  @id
+  idUser             Int
+  name               String               @db.VarChar(45)
+  lastName           String               @db.VarChar(45)
+  birth              DateTime             @db.Date
+  cell               String               @db.VarChar(45)
+  country            String               @db.VarChar(45)
+  motivation         String?              @db.VarChar(2000)
+  dateStart          DateTime             @default(now()) @db.Timestamp(0)
+  dateUpd            DateTime             @default(now()) @db.Timestamp(0)
+  careertimeline     CareerTimeline[]
+  educationalproject EducationalProject[]
+  languageprofile    LanguageProfile[]
+  user               User                 @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Person_User1")
+  tecnologieprofile  TecnologieProfile[]
+
+  @@index([idUser], map: "fk_Person_User1_idx")
+}
+
+
+model TecnologieProfile {
+  idTecnologieProfile Int      @id @default(autoincrement())
+  idPerson            Int
+  tecnologie          String   @db.VarChar(45)
+  description         String   @db.Text
+  dateStart           DateTime @default(now()) @db.Timestamp(0)
+  dateEnd             DateTime @default(now()) @db.Timestamp(0)
+  person              Person   @relation(fields: [idPerson], references: [idPerson], onDelete: NoAction, onUpdate: NoAction, map: "fk_TecnologieProfile_Person1")
+
+  @@index([idPerson], map: "fk_TecnologieProfile_Person1_idx")
+}
+
+model User {
+  idUser            Int                 @id @default(autoincrement())
+  email             String              @unique(map: "email_UNIQUE") @db.VarChar(255)
+  alias             String              @unique(map: "alias_UNIQUE") @db.VarChar(15)
+  password          String?             @db.VarChar(120)
+  image             String?             @db.VarChar(600)
+  emailVerified     DateTime?           
+  dateStart         DateTime            @default(now()) @db.Timestamp(0)
+  dateUpd           DateTime            @default(now()) @db.Timestamp(0)
+  person            Person[]
+  verificationtoken VerificationToken[]
+}
+
+model VerificationToken {
+  idVerificationToken BigInt   @id @default(autoincrement())
+  idUser              Int
+  token               String   @unique(map: "token_UNIQUE") @db.VarChar(255)
+  expires             DateTime @db.Timestamp(0)
+  dateStart           DateTime @default(now()) @db.Timestamp(0)
+  dateUpd             DateTime @default(now()) @db.Timestamp(0)
+  user                User     @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_VerificationToken_User1")
+
+  @@index([idUser], map: "fk_VerificationToken_User1_idx")
+}
+
