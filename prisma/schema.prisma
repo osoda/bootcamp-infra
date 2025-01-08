@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -23,7 +17,7 @@ model CareerTimeline {
   end              DateTime @db.Date
   dateStart        DateTime @default(now()) @db.Timestamp(0)
   dateUpd          DateTime @default(now()) @db.Timestamp(0)
-  person           Person   @relation(fields: [idPerson], references: [idPerson], onDelete: NoAction, onUpdate: NoAction, map: "fk_CareerTimeline_Person1")
+  Person           Person   @relation(fields: [idPerson], references: [idPerson], onDelete: NoAction, onUpdate: NoAction, map: "fk_CareerTimeline_Person1")
 
   @@index([idPerson], map: "fk_CareerTimeline_Person1_idx")
 }
@@ -36,9 +30,9 @@ model EducationalProject {
   url                  String?  @db.VarChar(255)
   dateStart            DateTime @default(now()) @db.Timestamp(0)
   dateUpd              DateTime @default(now()) @db.Timestamp(0)
-  person               Person   @relation(fields: [idPerson], references: [idPerson], onDelete: NoAction, onUpdate: NoAction, map: "fk_EducationalProject_Person10")
+  Person               Person   @relation(fields: [idPerson], references: [idPerson], onDelete: NoAction, onUpdate: NoAction, map: "fk_CareerTimeline_Person10")
 
-  @@index([idPerson], map: "fk_EducationalProject_Person10_idx")
+  @@index([idPerson], map: "fk_CareerTimeline_Person2_idx")
 }
 
 model LanguageProfile {
@@ -48,9 +42,21 @@ model LanguageProfile {
   level             String   @db.VarChar(45)
   dateStart         DateTime @default(now()) @db.Timestamp(0)
   dateUpd           DateTime @default(now()) @db.Timestamp(0)
-  person            Person   @relation(fields: [idPerson], references: [idPerson], onDelete: NoAction, onUpdate: NoAction, map: "fk_LanguageProfile_Person1")
+  Person            Person   @relation(fields: [idPerson], references: [idPerson], onDelete: NoAction, onUpdate: NoAction, map: "fk_LanguageProfile_Person1")
 
   @@index([idPerson], map: "fk_LanguageProfile_Person1_idx")
+}
+
+model PermissionAction {
+  permissionDo   String           @id @db.VarChar(100)
+  description    String?          @db.VarChar(255)
+  rolepermission RolePermission[]
+}
+
+model PermissionSubject {
+  permissionSubject String           @id @db.VarChar(100)
+  description       String?          @db.VarChar(255)
+  rolepermission    RolePermission[]
 }
 
 model Person {
@@ -61,18 +67,38 @@ model Person {
   birth              DateTime             @db.Date
   cell               String               @db.VarChar(45)
   country            String               @db.VarChar(45)
-  motivation         String?              @db.VarChar(2000)
+  motivation         String?              @db.Text
   dateStart          DateTime             @default(now()) @db.Timestamp(0)
   dateUpd            DateTime             @default(now()) @db.Timestamp(0)
-  careertimeline     CareerTimeline[]
-  educationalproject EducationalProject[]
-  languageprofile    LanguageProfile[]
-  user               User                 @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Person_User1")
-  tecnologieprofile  TecnologieProfile[]
+  CareerTimeline     CareerTimeline[]
+  EducationalProject EducationalProject[]
+  LanguageProfile    LanguageProfile[]
+  User               User                 @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_Person_User1")
+  TecnologieProfile  TecnologieProfile[]
 
   @@index([idUser], map: "fk_Person_User1_idx")
 }
 
+model Role {
+  role                                     String           @id @db.VarChar(100)
+  description                              String?          @db.VarChar(255)
+  rolepermission_rolepermission_roleTorole RolePermission[] @relation("rolepermission_roleTorole")
+  user_user_roleTorole                     User[]           @relation("user_roleTorole")
+}
+
+model RolePermission {
+  idRolPermission                Int               @id @default(autoincrement())
+  role                           String            @db.VarChar(100)
+  permissionDo                   String            @db.VarChar(100)
+  permissionSubject              String            @db.VarChar(100)
+  PermissionAction               PermissionAction  @relation(fields: [permissionDo], references: [permissionDo], onDelete: NoAction, onUpdate: NoAction, map: "fk_RolePermission_PermissionAction1")
+  PermissionSubject              PermissionSubject @relation(fields: [permissionSubject], references: [permissionSubject], onDelete: NoAction, onUpdate: NoAction, map: "fk_RolePermission_PermissionSubject1")
+  role_rolepermission_roleTorole Role              @relation("rolepermission_roleTorole", fields: [role], references: [role], onDelete: NoAction, onUpdate: NoAction, map: "fk_RolePermission_Role1")
+
+  @@index([permissionDo], map: "fk_RolePermission_PermissionAction1_idx")
+  @@index([permissionSubject], map: "fk_RolePermission_PermissionSubject1_idx")
+  @@index([role], map: "fk_RolePermission_Role1_idx")
+}
 
 model TecnologieProfile {
   idTecnologieProfile Int      @id @default(autoincrement())
@@ -81,22 +107,26 @@ model TecnologieProfile {
   description         String   @db.Text
   dateStart           DateTime @default(now()) @db.Timestamp(0)
   dateEnd             DateTime @default(now()) @db.Timestamp(0)
-  person              Person   @relation(fields: [idPerson], references: [idPerson], onDelete: NoAction, onUpdate: NoAction, map: "fk_TecnologieProfile_Person1")
+  Person              Person   @relation(fields: [idPerson], references: [idPerson], onDelete: NoAction, onUpdate: NoAction, map: "fk_TecnologieProfile_Person1")
 
   @@index([idPerson], map: "fk_TecnologieProfile_Person1_idx")
 }
 
 model User {
-  idUser            Int                 @id @default(autoincrement())
-  email             String              @unique(map: "email_UNIQUE") @db.VarChar(255)
-  alias             String              @unique(map: "alias_UNIQUE") @db.VarChar(15)
-  password          String?             @db.VarChar(120)
-  image             String?             @db.VarChar(600)
-  emailVerified     DateTime?           
-  dateStart         DateTime            @default(now()) @db.Timestamp(0)
-  dateUpd           DateTime            @default(now()) @db.Timestamp(0)
-  person            Person[]
-  verificationtoken VerificationToken[]
+  idUser               Int                 @id @default(autoincrement())
+  role                 String              @db.VarChar(100)
+  email                String              @unique(map: "email_UNIQUE") @db.VarChar(255)
+  alias                String              @unique(map: "alias_UNIQUE") @db.VarChar(15)
+  password             String?             @db.VarChar(120)
+  image                String?             @db.Text
+  emailVerified        DateTime?           @db.Timestamp(0)
+  dateStart            DateTime            @default(now()) @db.Timestamp(0)
+  dateUpd              DateTime            @default(now()) @db.Timestamp(0)
+  Person               Person[]
+  role_user_roleTorole Role                @relation("user_roleTorole", fields: [role], references: [role], onDelete: NoAction, onUpdate: NoAction, map: "fk_User_Role1")
+  VerificationToken    VerificationToken[]
+
+  @@index([role], map: "fk_User_Role1_idx")
 }
 
 model VerificationToken {
@@ -106,8 +136,7 @@ model VerificationToken {
   expires             DateTime @db.Timestamp(0)
   dateStart           DateTime @default(now()) @db.Timestamp(0)
   dateUpd             DateTime @default(now()) @db.Timestamp(0)
-  user                User     @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_VerificationToken_User1")
+  User                User     @relation(fields: [idUser], references: [idUser], onDelete: NoAction, onUpdate: NoAction, map: "fk_VerificationToken_User1")
 
   @@index([idUser], map: "fk_VerificationToken_User1_idx")
 }
-
